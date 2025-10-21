@@ -80,4 +80,4 @@ Stretch goals:
 - **Educational demo:** Teach live sampling and signal flow concepts
 - **Creative sketchpad:** Experiment with spontaneous musical ideas
 
-_With the help of ChatGPT document was written and formatted in Markdown._
+_I used ChatGPT to help me for an effecient Markdown._
