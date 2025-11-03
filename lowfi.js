@@ -5,17 +5,22 @@ gainNode.connect(ctx.destination);
 let audioBuffer;
 let sourceNode = null;
 
+// Select elements
+const fileInput = document.querySelector(".file-upload");
+const playBtn = document.querySelector(".play-button");
+const statusText = document.querySelector(".status");
+
 // Load audio file
-document.getElementById("fileUpload").addEventListener("change", async (e) => {
+fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const arrayBuffer = await file.arrayBuffer();
   audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-  document.getElementById("status").textContent = `Loaded: ${file.name}`;
+  statusText.textContent = `Loaded: ${file.name}`;
 });
 
 // Play audio
-document.getElementById("play").addEventListener("click", () => {
+playBtn.addEventListener("click", () => {
   if (!audioBuffer) {
     alert("Please upload a file first.");
     return;
@@ -30,8 +35,8 @@ document.getElementById("play").addEventListener("click", () => {
   sourceNode.onended = () => {
     sourceNode.disconnect();
     sourceNode = null;
-    document.getElementById("status").textContent = "Playback ended.";
+    statusText.textContent = "Playback ended.";
   };
   sourceNode.start();
-  document.getElementById("status").textContent = "Playing...";
+  statusText.textContent = "Playing...";
 });
