@@ -3,7 +3,6 @@ const gainNode = ctx.createGain();
 gainNode.connect(ctx.destination);
 
 let audioBuffer;
-let sourceNode = null;
 
 // Select elements
 const fileInput = document.querySelector(".file-upload");
@@ -20,23 +19,26 @@ fileInput.addEventListener("change", async (e) => {
 });
 
 // Play audio
-playBtn.addEventListener("click", () => {
+playBtn.addEventListener("click", async () => {
   if (!audioBuffer) {
     alert("Please upload a file first.");
     return;
   }
-  if (sourceNode) {
-    alert("Audio is already playing.");
-    return;
+
+  // Resume AudioContext if suspended
+  if (ctx.state === "suspended") {
+    await ctx.resume();
   }
-  sourceNode = ctx.createBufferSource();
+
+  // Create a new source node every time you play
+  const sourceNode = ctx.createBufferSource();
   sourceNode.buffer = audioBuffer;
   sourceNode.connect(gainNode);
+
   sourceNode.onended = () => {
-    sourceNode.disconnect();
-    sourceNode = null;
     statusText.textContent = "Playback ended.";
   };
+
   sourceNode.start();
   statusText.textContent = "Playing...";
 });
