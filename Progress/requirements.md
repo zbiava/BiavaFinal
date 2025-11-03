@@ -15,7 +15,7 @@ Users can record sounds from a microphone, assign them to pads, and play them ba
 
 ---
 
-## 👥 Use Cases
+## Use Cases
 
 ### Use Case 1: Live Sampling
 
