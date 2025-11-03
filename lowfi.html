@@ -1,24 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>File Upload</title>
-    <script type="module" src="script.js"></script>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Audio Reverse Demo</title>
 </head>
 <body>
-    <header>
-        <h1>Uploading, Playing, and Reversing an Audio File</h1>
-        <p class="note">
-            This tutorial uses the Web Audio API. You will: 1) upload a file and decode it into an <code>AudioBuffer</code>, 2) play that buffer, and 3) reverse the buffer for reverse playback.
-        </p>
-    </header>
+  <h2>Audio Reverse Demo</h2>
 
-    <section class="controls" aria-label="Player controls">
-        <input id="fileUpload" type="file" accept="audio/*" />
-        <button id="play" type="button">Play</button>
-        <button id="reverse" type="button">Reverse</button>
-        <span id="status" class="note" role="status" aria-live="polite"></span>
-    </section>
+  <input id="fileUpload" type="file" accept="audio/*">
+  <button id="reversePlay">Reverse & Play</button>
+
+  <p id="status"></p>
+
+  <script src="script.js"></script>
 </body>
 </html>

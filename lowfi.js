@@ -1,39 +1,31 @@
 const ctx = new AudioContext();
-let audiobuffer, sourceNode;
-const gain = ctx.createGain();
-gain.connect(ctx.destination);
+let audioBuffer;
 
-const loadAndDecode = async function (event) {
-  let file = event.target.files[0];
-  let arraybuf = await file.arrayBuffer();
-  audiobuffer = await ctx.decodeAudioData(arraybuf);
-};
+// Load audio file into buffer
+document.getElementById("fileUpload").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const arrayBuffer = await file.arrayBuffer();
+  audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  document.getElementById("status").textContent = `Loaded: ${file.name}`;
+});
 
-const playBuffer = function () {
-  if (audiobuffer) {
-    if (!sourceNode) {
-      sourceNode = new AudioBufferSourceNode(ctx, { buffer: audiobuffer });
-      sourceNode.onended = () => {
-        sourceNode.disconnect();
-        sourceNode = null;
-      };
-      sourceNode.connect(gain);
-      sourceNode.start();
-    } else {
-      alert("Audio file already playing.");
-    }
-  } else {
-    alert("Please upload an audio file.");
+// Reverse and play
+document.getElementById("reversePlay").addEventListener("click", () => {
+  if (!audioBuffer) {
+    alert("Please upload a file first.");
+    return;
   }
-};
 
-const revAudioBuffer = function () {
-  for (let ch = 0; ch < audiobuffer.numberOfChannels; ch++) {
-    let revData = audiobuffer.getChannelData(ch).reverse();
-    audiobuffer.copyToChannel(revData, ch);
+  // Reverse each channel
+  for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+    audioBuffer.getChannelData(i).reverse();
   }
-};
 
-document.querySelector("#fileUpload").addEventListener("change", loadAndDecode);
-document.querySelector("#play").addEventListener("click", playBuffer);
-document.querySelector("#reverse").addEventListener("click", revAudioBuffer);
+  const src = ctx.createBufferSource();
+  src.buffer = audioBuffer;
+  src.connect(ctx.destination);
+  src.start();
+
+  document.getElementById("status").textContent = "Playing reversed audio...";
+});
