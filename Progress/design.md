@@ -1,65 +1,100 @@
-# Design Document – Live Sampler Prototype
+# 🎧 Audio Buffer Loader & Reverser – Design Document
 
-## Overview
-This document outlines the current design and functionality of the **Live Sampler Prototype**, an early-stage web-based audio tool. The prototype allows users to upload, play, and reverse audio samples in real time using the Web Audio API. This serves as the foundation for a more complex live sampling and looping application.
+## Project Overview
+This project is a simple web-based audio tool built with the **Web Audio API**. It allows users to upload an audio file, decode it into an `AudioBuffer`, play it back, and reverse the audio for backward playback. This prototype demonstrates the core functionality for a future live sampler.
 
 ---
 
-## Current Features
+## Software Architecture (Block Diagram)
 
-### 1. **Audio Context and Gain Control**
-- Creates an `AudioContext` to manage the audio graph.  
-- A `GainNode` controls overall playback volume and connects to the destination (speakers).
+[User Uploads File]
+↓
+[File Input Element]
+↓
+[loadAndDecode() → decodes file to AudioBuffer]
+↓
+[AudioBuffer stored in memory]
+↓
+[playBuffer() or revAudioBuffer()]
+↓
+[Gain Node → AudioContext → Speakers]
 
-### 2. **File Upload and Decoding**
-- Users can upload an audio file using a file input element.  
-- The file is decoded into an `AudioBuffer` for manipulation and playback.
+### Main Components
+- **AudioContext:** Manages audio processing and routing.
+- **AudioBuffer:** Holds decoded audio data.
+- **Gain Node:** Controls output volume.
+- **Buttons & File Input:** User interface for file upload, playback, and reversal.
 
-### 3. **Playback System**
-- A new `AudioBufferSourceNode` is created to play the decoded audio.  
-- The system prevents multiple overlapping playbacks by checking if a source is already active.  
-- Playback automatically resets when the sound finishes.
+---
 
-### 4. **Reverse Functionality**
-- The `revAudioBuffer()` function reverses all audio channels in the loaded buffer.  
-- Enables users to play sounds backward, a common creative tool in sampling.
+## User Interface Design (Wireframe)
+
+
+### Interface Elements
+- **Choose File:** Opens local file selector for audio upload.
+- **Play Button:** Plays the decoded buffer through the `AudioContext`.
+- **Reverse Button:** Reverses the `AudioBuffer` for backward playback.
+- **Status Indicator:** Displays current state or error messages.
 
 ---
 
 ## System Workflow
+1. **Upload Phase**
+   - User selects an audio file.
+   - The file is read and decoded into an `AudioBuffer` using `decodeAudioData()`.
 
+2. **Playback Phase**
+   - When “Play” is clicked, the `AudioBuffer` connects to a `GainNode`, then outputs through the `AudioContext`.
+   - A safeguard prevents playing multiple overlapping buffers.
 
----
+3. **Reversal Phase**
+   - Clicking “Reverse” runs a loop through all channels in the buffer.
+   - Each channel’s sample data is reversed using `.getChannelData()` and `.reverse()`.
+   - The modified data is copied back to the buffer.
 
-## What Still Needs to Be Added
-
-### Core Additions
-- **Looping Controls:** Allow users to continuously loop samples.  
-- **Multiple Sample Slots:** Enable loading and triggering of multiple audio clips.  
-- **Visual Interface:** Add buttons and sliders for a complete UI experience.  
-- **Volume & Pan Controls:** Expand gain control and add stereo positioning.  
-- **Real-Time Effects:** Include basic effects (delay, reverb, filter).  
-
-### Technical Enhancements
-- **Waveform Display:** Visualize the audio buffer for clarity and control.  
-- **Save/Load Samples:** Option to save sample sets locally or via browser storage.  
-- **Responsive Error Handling:** Better user feedback and prevention of playback errors.
+4. **End Phase**
+   - When playback finishes, the `sourceNode` disconnects to free memory and reset state.
 
 ---
 
-## Technologies Used
-- **JavaScript (ES6)**  
-- **Web Audio API**  
-- **HTML5 File API**  
+## Current Prototype Code
+```javascript
+const ctx = new AudioContext();
+let audiobuffer, sourceNode;
+const gain = ctx.createGain();
+gain.connect(ctx.destination);
 
----
+const loadAndDecode = async function (event) {
+  let file = event.target.files[0];
+  let arraybuf = await file.arrayBuffer();
+  audiobuffer = await ctx.decodeAudioData(arraybuf);
+};
 
-## Next Steps
-This prototype serves as the minimal viable product (MVP) for the **Live Sampler** project. The next development stage will focus on:
-- Designing the front-end user interface (HTML/CSS or React).  
-- Implementing looping and multi-sample features.  
-- Building a more modular code structure for scalability.  
+const playBuffer = function () {
+  if (audiobuffer) {
+    if (!sourceNode) {
+      sourceNode = new AudioBufferSourceNode(ctx, { buffer: audiobuffer });
+      sourceNode.onended = () => {
+        sourceNode.disconnect();
+        sourceNode = null;
+      };
+      sourceNode.connect(gain);
+      sourceNode.start();
+    } else {
+      alert("Audio file already playing.");
+    }
+  } else {
+    alert("Please upload an audio file.");
+  }
+};
 
----
+const revAudioBuffer = function () {
+  for (let ch = 0; ch < audiobuffer.numberOfChannels; ch++) {
+    let revData = audiobuffer.getChannelData(ch).reverse();
+    audiobuffer.copyToChannel(revData, ch);
+  }
+};
 
-*This document was created with help from ChatGPT.*
+document.querySelector("#fileUpload").addEventListener("change", loadAndDecode);
+document.querySelector("#play").addEventListener("click", playBuffer);
+document.querySelector("#reverse").addEventListener("click", revAudioBuffer);
