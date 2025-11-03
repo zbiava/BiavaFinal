@@ -1,7 +1,11 @@
 const ctx = new AudioContext();
-let audioBuffer;
+const gainNode = ctx.createGain();
+gainNode.connect(ctx.destination);
 
-// Load audio file into buffer
+let audioBuffer;
+let sourceNode = null;
+
+// Load audio file
 document.getElementById("fileUpload").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -10,22 +14,24 @@ document.getElementById("fileUpload").addEventListener("change", async (e) => {
   document.getElementById("status").textContent = `Loaded: ${file.name}`;
 });
 
-// Reverse and play
-document.getElementById("reversePlay").addEventListener("click", () => {
+// Play audio
+document.getElementById("play").addEventListener("click", () => {
   if (!audioBuffer) {
     alert("Please upload a file first.");
     return;
   }
-
-  // Reverse each channel
-  for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-    audioBuffer.getChannelData(i).reverse();
+  if (sourceNode) {
+    alert("Audio is already playing.");
+    return;
   }
-
-  const src = ctx.createBufferSource();
-  src.buffer = audioBuffer;
-  src.connect(ctx.destination);
-  src.start();
-
-  document.getElementById("status").textContent = "Playing reversed audio...";
+  sourceNode = ctx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(gainNode);
+  sourceNode.onended = () => {
+    sourceNode.disconnect();
+    sourceNode = null;
+    document.getElementById("status").textContent = "Playback ended.";
+  };
+  sourceNode.start();
+  document.getElementById("status").textContent = "Playing...";
 });
