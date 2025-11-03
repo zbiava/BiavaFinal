@@ -1,4 +1,4 @@
-# 🎧 Audio Buffer Loader & Reverser – Design Document
+# Audio Buffer Loader & Reverser – Design Document
 
 ## Project Overview
 This project is a simple web-based audio tool built with the **Web Audio API**. It allows users to upload an audio file, decode it into an `AudioBuffer`, play it back, and reverse the audio for backward playback. This prototype demonstrates the core functionality for a future live sampler.

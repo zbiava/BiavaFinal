@@ -1,4 +1,4 @@
-# 🎛️ Live Sampler
+# Live Sampler
 
 **Author:** Zachary Biava  
 **Course:** Music Technology Final Project  
