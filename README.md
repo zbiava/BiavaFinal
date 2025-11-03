@@ -7,7 +7,7 @@
 
 ---
 
-## 🧠 Project Description
+## Project Description
 
 The **Live Sampler** is an interactive, browser-based music tool that allows users to **record, trigger, and manipulate live audio samples** in real time. It is designed for performers, producers, and sound artists who want a lightweight, creative way to capture and remix sounds during live sessions or improvisation.
 
@@ -17,7 +17,7 @@ The goal is to provide an **intuitive live sampling environment** that bridges t
 
 ---
 
-## 🎯 Objectives and Scope
+## Objectives and Scope
 
 ### Objectives
 
@@ -42,7 +42,7 @@ Stretch goals:
 
 ---
 
-## ⚙️ Anticipated Resources
+## Anticipated Resources
 
 **Software:**
 
@@ -58,7 +58,7 @@ Stretch goals:
 
 ---
 
-## 🗓️ Timeline
+## Timeline
 
 | Week  | Dates        | Milestone                   | Description                                   |
 | ----- | ------------ | --------------------------- | --------------------------------------------- |
@@ -73,7 +73,7 @@ Stretch goals:
 
 ---
 
-## 💡 Potential Uses
+## Potential Uses
 
 - **Live performance tool:** Capture and remix sounds on stage
 - **Sound design:** Quickly sample and process textures or vocals
