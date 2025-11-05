@@ -1,44 +1,47 @@
+//------------------- AUDIO CONTEXT & NODES -------------------
 const ctx = new AudioContext();
-const gainNode = ctx.createGain();
-gainNode.connect(ctx.destination);
+const gain = new GainNode(ctx);
+gain.connect(ctx.destination);
 
-let audioBuffer;
+let audioBuffer = null;
+let sourceNode = null;
 
-// Select elements
-const fileInput = document.querySelector(".file-upload");
-const playBtn = document.querySelector(".play-button");
-const statusText = document.querySelector(".status");
+//------------------- FUNCTION DEFINITIONS -------------------
 
-// Load audio file
-fileInput.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
+// Load and decode the audio file
+const loadAndDecode = async function (event) {
+  const file = event.target.files[0];
   if (!file) return;
+
   const arrayBuffer = await file.arrayBuffer();
   audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-  statusText.textContent = `Loaded: ${file.name}`;
-});
+  console.log("Audio loaded:", audioBuffer);
+};
 
-// Play audio
-playBtn.addEventListener("click", async () => {
+// Play the loaded audio
+const playBuffer = async function () {
   if (!audioBuffer) {
-    alert("Please upload a file first.");
+    alert("Please upload an audio file first.");
     return;
   }
 
-  // Resume AudioContext if suspended
+  // Resume AudioContext if suspended (required by some browsers)
   if (ctx.state === "suspended") {
     await ctx.resume();
   }
 
-  // Create a new source node every time you play
-  const sourceNode = ctx.createBufferSource();
-  sourceNode.buffer = audioBuffer;
-  sourceNode.connect(gainNode);
+  // Create a new source node each time
+  sourceNode = new AudioBufferSourceNode(ctx, { buffer: audioBuffer });
+  sourceNode.connect(gain);
 
   sourceNode.onended = () => {
-    statusText.textContent = "Playback ended.";
+    sourceNode.disconnect();
+    sourceNode = null;
   };
 
   sourceNode.start();
-  statusText.textContent = "Playing...";
-});
+};
+
+//------------------- EVENT LISTENERS -------------------
+document.querySelector("#fileUpload").addEventListener("change", loadAndDecode);
+document.querySelector("#play").addEventListener("click", playBuffer);
