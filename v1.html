@@ -1,24 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Audio Chopper — 4 Slices</title>
+  <meta charset="UTF-8" />
+  <title>Audio Slice Player</title>
+  <script defer src="script.js"></script>
+
+  </style>
 </head>
 <body>
-  <h1>Audio Chopper (4 Slices)</h1>
-
-  <input type="file" id="fileUpload" accept="audio/*">
-  <button id="playFull" disabled>Play Full</button>
-
+  <h1>Audio Slicer</h1>
+  <input id="fileUpload" type="file" accept="audio/*" />
+  <br>
+  <button id="playFull">Play Full Sample</button>
   <div>
-    <button id="slice0" disabled>Slice 1</button>
-    <button id="slice1" disabled>Slice 2</button>
-    <button id="slice2" disabled>Slice 3</button>
-    <button id="slice3" disabled>Slice 4</button>
+    <button class="sliceBtn" id="slice1">Slice 1</button>
+    <button class="sliceBtn" id="slice2">Slice 2</button>
+    <button class="sliceBtn" id="slice3">Slice 3</button>
+    <button class="sliceBtn" id="slice4">Slice 4</button>
   </div>
-
-  <p id="status">No file loaded.</p>
-
-  <script src="script.js"></script>
+  <p id="status">Status: Waiting for file...</p>
 </body>
 </html>
