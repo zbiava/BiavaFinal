@@ -25,12 +25,10 @@ const playBuffer = async function () {
     return;
   }
 
-  // Resume AudioContext if suspended (required by some browsers)
   if (ctx.state === "suspended") {
     await ctx.resume();
   }
 
-  // Create a new source node each time
   sourceNode = new AudioBufferSourceNode(ctx, { buffer: audioBuffer });
   sourceNode.connect(gain);
 
