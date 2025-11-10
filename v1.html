@@ -1,34 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Live Sampler — 4 Slices</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Audio Chopper — 4 Slices</title>
 </head>
 <body>
-  <main>
-    <h1>Live Sampler — 4 Slices</h1>
+  <h1>Audio Chopper (4 Slices)</h1>
 
-    <section class="controls">
-      <label>
-        Load audio
-        <input id="fileUpload" type="file" accept="audio/*">
-      </label>
+  <input type="file" id="fileUpload" accept="audio/*">
+  <button id="playFull" disabled>Play Full</button>
 
-      <div style="margin-top:12px;">
-        <button id="playFull">Play Full</button>
-        <!-- slice buttons -->
-        <button id="slice0" class="slice-btn" disabled>Slice 1</button>
-        <button id="slice1" class="slice-btn" disabled>Slice 2</button>
-        <button id="slice2" class="slice-btn" disabled>Slice 3</button>
-        <button id="slice3" class="slice-btn" disabled>Slice 4</button>
-      </div>
+  <div>
+    <button id="slice0" disabled>Slice 1</button>
+    <button id="slice1" disabled>Slice 2</button>
+    <button id="slice2" disabled>Slice 3</button>
+    <button id="slice3" disabled>Slice 4</button>
+  </div>
 
-      <p id="status" aria-live="polite" class="status">No file loaded.</p>
-    </section>
-  </main>
+  <p id="status">No file loaded.</p>
 
-  <script src="script.js" type="module"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,125 +1,121 @@
+// Core Web Audio setup
+let audioCtx;
+let gainNode;
+let audioBuffer = null;
+let sliceBuffers = [];
+let isAudioLoaded = false;
 
-
-let audioCtx = null;
-let masterGain = null;
-let originalBuffer = null;
-let sliceBuffers = []; // will hold 4 AudioBuffers
-
-
-const fileInput = document.querySelector("#fileUpload");
-const statusText = document.querySelector("#status");
-const playFullBtn = document.querySelector("#playFull");
+// Elements
+const fileInput = document.getElementById("fileUpload");
+const playFullBtn = document.getElementById("playFull");
 const sliceBtns = [
-  document.querySelector("#slice0"),
-  document.querySelector("#slice1"),
-  document.querySelector("#slice2"),
-  document.querySelector("#slice3"),
+  document.getElementById("slice0"),
+  document.getElementById("slice1"),
+  document.getElementById("slice2"),
+  document.getElementById("slice3"),
 ];
+const statusText = document.getElementById("status");
 
-function ensureAudioContext() {
+//---------------------- Setup ----------------------
+
+function setupAudioContext() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.9;
-    masterGain.connect(audioCtx.destination);
+    gainNode = audioCtx.createGain();
+    gainNode.connect(audioCtx.destination);
   }
 }
 
+//---------------------- Load and Decode ----------------------
 
-fileInput.addEventListener("change", async (e) => {
-  const file = e.target.files?.[0];
+async function loadAndDecode(event) {
+  const file = event.target.files[0];
   if (!file) return;
-  ensureAudioContext();
+
+  setupAudioContext();
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-    originalBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    isAudioLoaded = true;
     statusText.textContent = `Loaded: ${
       file.name
-    } — ${originalBuffer.duration.toFixed(2)}s`;
-
-    
-    createFourSlices(originalBuffer);
-
-    
-    sliceBtns.forEach((b) => (b.disabled = false));
-    playFullBtn.disabled = false;
+    } (${audioBuffer.duration.toFixed(2)}s)`;
+    enableButtons();
+    createSlices(audioBuffer);
   } catch (err) {
-    console.error("Error decoding audio:", err);
+    console.error("Error decoding file:", err);
     statusText.textContent = "Error decoding audio file.";
   }
-});
+}
 
+//---------------------- Slice Creation ----------------------
 
-function createFourSlices(sourceBuffer) {
-  sliceBuffers = []; 
-  const totalFrames = sourceBuffer.length;
-  const sampleRate = sourceBuffer.sampleRate;
-  const channels = sourceBuffer.numberOfChannels;
+function createSlices(buffer) {
+  sliceBuffers = [];
+  const totalFrames = buffer.length;
   const sliceFrames = Math.floor(totalFrames / 4);
+  const sampleRate = buffer.sampleRate;
+  const channels = buffer.numberOfChannels;
 
-  for (let sliceIndex = 0; sliceIndex < 4; sliceIndex++) {
-    
-    const startFrame = sliceIndex * sliceFrames;
-    const endFrame = sliceIndex === 3 ? totalFrames : startFrame + sliceFrames;
-    const framesCount = endFrame - startFrame;
+  for (let i = 0; i < 4; i++) {
+    const startFrame = i * sliceFrames;
+    const endFrame = i === 3 ? totalFrames : startFrame + sliceFrames;
+    const length = endFrame - startFrame;
 
-  
-    const newBuf = audioCtx.createBuffer(channels, framesCount, sampleRate);
+    const newBuffer = audioCtx.createBuffer(channels, length, sampleRate);
 
-    
     for (let ch = 0; ch < channels; ch++) {
-      const sourceData = sourceBuffer.getChannelData(ch);
-      
-      const sliceData = sourceData.subarray(startFrame, endFrame);
-      
-      newBuf.copyToChannel(sliceData, ch, 0);
+      const channelData = buffer
+        .getChannelData(ch)
+        .subarray(startFrame, endFrame);
+      newBuffer.copyToChannel(channelData, ch, 0);
     }
 
-    sliceBuffers.push(newBuf);
+    sliceBuffers.push(newBuffer);
   }
 
-  statusText.textContent += ` — created 4 slices (${(
-    sliceBuffers[0].length / sampleRate
-  ).toFixed(2)}s each approx.)`;
+  statusText.textContent += " — Created 4 slices.";
 }
 
+//---------------------- Playback ----------------------
 
-function playBuffer(buf) {
-  if (!buf) return;
-  
-  if (audioCtx.state === "suspended") audioCtx.resume();
-
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
-  src.connect(masterGain);
-  src.onended = () => {
-    
-    statusText.textContent = "Playback ended.";
-  };
-  src.start();
-  statusText.textContent = `Playing (${buf.duration.toFixed(2)}s)`;
-}
-
-playFullBtn.addEventListener("click", () => {
-  if (!originalBuffer) {
-    alert("Please load an audio file first.");
+function playAudioBuffer(buffer) {
+  if (!buffer) {
+    alert("No audio buffer loaded.");
     return;
   }
-  playBuffer(originalBuffer);
+
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(gainNode);
+  source.start();
+
+  statusText.textContent = `Playing ${buffer.duration.toFixed(2)}s`;
+  source.onended = () => (statusText.textContent = "Playback ended.");
+}
+
+//---------------------- Enable Buttons ----------------------
+
+function enableButtons() {
+  playFullBtn.disabled = false;
+  sliceBtns.forEach((btn) => (btn.disabled = false));
+}
+
+//---------------------- Event Listeners ----------------------
+
+fileInput.addEventListener("change", loadAndDecode);
+
+playFullBtn.addEventListener("click", () => {
+  if (isAudioLoaded && audioBuffer) playAudioBuffer(audioBuffer);
+  else alert("Please load a file first!");
 });
 
-
-sliceBtns.forEach((btn, idx) => {
-  btn.addEventListener("click", () => {
-    if (!sliceBuffers[idx]) {
-      alert("Slice not ready.");
-      return;
-    }
-    playBuffer(sliceBuffers[idx]);
-  });
-});
-
-sliceBtns.forEach((b) => (b.disabled = true));
-playFullBtn.disabled = true;
-statusText.textContent = "No file loaded.";
+sliceBtns[0].addEventListener("click", () => playAudioBuffer(sliceBuffers[0]));
+sliceBtns[1].addEventListener("click", () => playAudioBuffer(sliceBuffers[1]));
+sliceBtns[2].addEventListener("click", () => playAudioBuffer(sliceBuffers[2]));
+sliceBtns[3].addEventListener("click", () => playAudioBuffer(sliceBuffers[3]));
