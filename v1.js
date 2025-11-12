@@ -26,9 +26,9 @@ async function loadAndDecode(file) {
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
   console.log("Audio loaded:", audioBuffer.duration, "seconds");
 
-  document.getElementById("status").textContent = `Loaded: ${
-    file.name
-  } (${audioBuffer.duration.toFixed(2)}s)`;
+  // document.getElementById("status").textContent = `Loaded: ${
+  //   file.name
+  // } (${audioBuffer.duration.toFixed(2)}s)`;
   isAudioLoaded = true;
   createSlices();
 }
@@ -57,7 +57,7 @@ function createSlices() {
   }
 
   console.log("Slices created:", sliceBuffers.length);
-  document.getElementById("status").textContent += " | Slices ready!";
+  //document.getElementById("status").textContent += " | Slices ready!";
 }
 
 // ---------- PLAY AUDIO BUFFER ----------------
