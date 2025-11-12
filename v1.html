@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Audio Slice Player</title>
-  <script type = "module" src="v1.js"></script>
-
-  </style>
+  <meta charset="UTF-8">
+  <title>Audio Slicer</title>
+  <script type="module" src="v1.js"></script>
 </head>
 <body>
   <h1>Audio Slicer</h1>
-  <input id="fileUpload" type="file" accept="audio/*" />
-  <br>
-  <button id="playFull">Play Full Sample</button>
-  <div>
-    <button class="sliceBtn" id="slice1">Slice 1</button>
-    <button class="sliceBtn" id="slice2">Slice 2</button>
-    <button class="sliceBtn" id="slice3">Slice 3</button>
-    <button class="sliceBtn" id="slice4">Slice 4</button>
-  </div>
 
+  <input id="fileUpload" type="file" accept="audio/*"><br><br>
+
+  <button id="slice1">Slice 1</button>
+  <button id="slice2">Slice 2</button>
+  <button id="slice3">Slice 3</button>
+  <button id="slice4">Slice 4</button>
+  <button id="stop">Stop</button>
+
+  <p id="status">No file loaded.</p>
 </body>
 </html>
