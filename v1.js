@@ -4,7 +4,7 @@ let audioBuffer = null;
 let slices = [];
 let currentSource = null;
 
-// Initialize audio context
+// start audio context
 function initAudioContext() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -29,7 +29,7 @@ async function loadAndDecode(e) {
   createSlices();
 }
 
-// Create 4 equal-length slices
+// Create 4 slices
 function createSlices() {
   slices = [];
   const sliceCount = 4;
