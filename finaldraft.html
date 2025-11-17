@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Sampler</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #1e1e1e; color: #fff; }
+    canvas { border: 1px solid #444; width: 100%; height: 150px; display: block; margin-bottom: 10px; }
+    .controls { margin: 10px 0; }
+    button { margin: 2px; }
+    label { display: block; margin-top: 5px; }
+    input[type=range] { width: 200px; }
+  </style>
+</head>
+<body>
+  <h1>Audio Sampler</h1>
+  <input type="file" id="fileUpload" accept="audio/*" />
+  <canvas id="waveform"></canvas>
+
+  <div class="controls">
+    <button id="stop">Stop</button>
+    <div id="chopButtons"></div>
+  </div>
+
+  <div class="controls">
+    <label>Volume: <input type="range" id="volume" min="0" max="2" step="0.01" value="1"></label>
+    <label>Delay: <input type="range" id="delay" min="0" max="1" step="0.01" value="0"></label>
+    <label>Reverb: <input type="range" id="reverb" min="0" max="1" step="0.01" value="0"></label>
+    <label>Chorus: <input type="range" id="chorus" min="0" max="1" step="0.01" value="0"></label>
+  </div>
+
+  <script type="module" src="finaldraft.js"></script>
+</body>
+</html>
