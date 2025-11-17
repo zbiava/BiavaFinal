@@ -12,7 +12,7 @@ delayNode.connect(gainNode);
 reverbNode.connect(gainNode);
 chorusNode.connect(gainNode);
 
-// DOM elements
+
 const fileUpload = document.getElementById("fileUpload");
 const canvas = document.getElementById("waveform");
 const ctx2d = canvas.getContext("2d");
@@ -25,11 +25,11 @@ const reverbSlider = document.getElementById("reverb");
 const chorusSlider = document.getElementById("chorus");
 
 let numChops = 8;
-let chopLength = 0; // will calculate after loading
+let chopLength = 0; 
 let playhead = 0;
 let playheadRAF;
 
-//--------------------------Load Audio----------------------------
+//load audio
 fileUpload.addEventListener("change", async (evt) => {
   const file = evt.target.files[0];
   if (!file) return;
@@ -40,7 +40,7 @@ fileUpload.addEventListener("change", async (evt) => {
   createChopButtons();
 });
 
-//------------------------Draw Waveform---------------------------
+//waveform drawer
 function drawWaveform() {
   ctx2d.clearRect(0, 0, canvas.width, canvas.height);
   const data = audioBuffer.getChannelData(0);
@@ -59,7 +59,7 @@ function drawWaveform() {
   }
   ctx2d.stroke();
 
-  // Draw chop lines
+  //drawing
   ctx2d.strokeStyle = "#ff0";
   for (let i = 1; i < numChops; i++) {
     const x = (canvas.width / numChops) * i;
@@ -70,7 +70,7 @@ function drawWaveform() {
   }
 }
 
-//------------------------Create Chop Buttons-------------------
+//create chop
 function createChopButtons() {
   chopButtonsDiv.innerHTML = "";
   for (let i = 0; i < numChops; i++) {
@@ -81,7 +81,7 @@ function createChopButtons() {
   }
 }
 
-//------------------------Play Chop-----------------------------
+//play chop
 function stopAudio() {
   if (sourceNode) {
     sourceNode.stop();
@@ -103,7 +103,7 @@ function playChop(index) {
 
   // Connect FX chain
   sourceNode.connect(gainNode);
-  // For demo, also connect delay, reverb, chorus
+  // fx
   if (delaySlider.value > 0) {
     const delayGain = ctx.createGain();
     delayGain.gain.value = delaySlider.value;
@@ -111,7 +111,7 @@ function playChop(index) {
     delayNode.connect(delayGain).connect(gainNode);
   }
   if (reverbSlider.value > 0) {
-    reverbNode.buffer = audioBuffer; // using same audio as impulse
+    reverbNode.buffer = audioBuffer; 
     const revGain = ctx.createGain();
     revGain.gain.value = reverbSlider.value;
     sourceNode.connect(reverbNode);
@@ -134,15 +134,15 @@ function playChop(index) {
   animatePlayhead(startTime);
 }
 
-//------------------------Stop Button---------------------------
+// stop
 stopBtn.addEventListener("click", stopAudio);
 
-//------------------------Volume Control-------------------------
+// vol control
 volumeSlider.addEventListener("input", () => {
   gainNode.gain.value = volumeSlider.value;
 });
 
-//------------------------Playhead Animation--------------------
+// animation
 function animatePlayhead(startTime) {
   const start = ctx.currentTime;
   const duration = chopLength;
