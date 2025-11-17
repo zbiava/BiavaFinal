@@ -4,16 +4,21 @@ let audioBuffer = null;
 let slices = [];
 let currentSource = null;
 
-// start audio context
+// Initialize context only once
 function initAudioContext() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     gainNode = audioCtx.createGain();
     gainNode.connect(audioCtx.destination);
+
+    // attach volume slider
+    document.getElementById("volume").addEventListener("input", (e) => {
+      gainNode.gain.value = e.target.value;
+    });
   }
 }
 
-// Load and decode the uploaded audio file
+// Load and decode audio
 async function loadAndDecode(e) {
   initAudioContext();
 
@@ -26,16 +31,15 @@ async function loadAndDecode(e) {
   document.getElementById("status").textContent = `Loaded: ${file.name}`;
   console.log("Loaded audio:", file.name);
 
-  createSlices();
+  createSlices(8);
 }
 
-// Create 4 slices
-function createSlices() {
+// Create N equal-length slices
+function createSlices(count) {
   slices = [];
-  const sliceCount = 4;
-  const sliceLength = Math.floor(audioBuffer.length / sliceCount);
+  const sliceLength = Math.floor(audioBuffer.length / count);
 
-  for (let i = 0; i < sliceCount; i++) {
+  for (let i = 0; i < count; i++) {
     const start = i * sliceLength;
     const end = start + sliceLength;
 
@@ -53,52 +57,55 @@ function createSlices() {
     slices.push(sliceBuffer);
   }
 
-  console.log("Created 4 slices.");
-  document.getElementById("status").textContent = "Audio sliced into 4 parts.";
+  document.getElementById("status").textContent = `Created ${count} slices.`;
+  console.log(`Created ${count} slices.`);
 }
 
-// Play one slice and stop others
+// Play a specific slice
 function playSlice(index) {
   if (!audioBuffer) {
-    alert("Please load an audio file first.");
+    alert("Load an audio file first.");
     return;
   }
 
-  stopAudio();
+  stopAudio(); // stop previous slice
 
   const slice = slices[index];
-  if (!slice) {
-    console.error("Slice not found!");
-    return;
-  }
+  if (!slice) return;
 
   const source = audioCtx.createBufferSource();
   source.buffer = slice;
   source.connect(gainNode);
-  source.start(0);
+  source.start();
 
   currentSource = source;
-  console.log(`Playing slice ${index + 1}`);
 
   source.onended = () => {
     if (currentSource === source) currentSource = null;
   };
 }
 
-// Stop audio playback
+// Stop audio
 function stopAudio() {
   if (currentSource) {
-    currentSource.stop();
+    try {
+      currentSource.stop();
+    } catch (e) {}
     currentSource.disconnect();
     currentSource = null;
-    console.log("Stopped playback");
   }
 }
 
-// Event listeners
+// Attach listeners
 document.getElementById("fileUpload").addEventListener("change", loadAndDecode);
+
 document.getElementById("slice1").addEventListener("click", () => playSlice(0));
 document.getElementById("slice2").addEventListener("click", () => playSlice(1));
 document.getElementById("slice3").addEventListener("click", () => playSlice(2));
 document.getElementById("slice4").addEventListener("click", () => playSlice(3));
+document.getElementById("slice5").addEventListener("click", () => playSlice(4));
+document.getElementById("slice6").addEventListener("click", () => playSlice(5));
+document.getElementById("slice7").addEventListener("click", () => playSlice(6));
+document.getElementById("slice8").addEventListener("click", () => playSlice(7));
+
 document.getElementById("stop").addEventListener("click", stopAudio);
