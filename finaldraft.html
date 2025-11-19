@@ -1,34 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Audio Sampler</title>
+  <title>8-Chop Sampler</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #1e1e1e; color: #fff; }
-    canvas { border: 1px solid #444; width: 100%; height: 150px; display: block; margin-bottom: 10px; }
-    .controls { margin: 10px 0; }
-    button { margin: 2px; }
-    label { display: block; margin-top: 5px; }
-    input[type=range] { width: 200px; }
+    body { font-family: Arial; background: #f3f3f3; padding: 20px; }
+    h1 { font-weight: 700; }
+    .chops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+    button { padding: 15px; font-size: 16px; border-radius: 8px; border: none; background: #444; color: white; cursor: pointer; }
+    button:hover { background: #222; }
+    .controls { margin-top: 30px; }
+    .controls label { display: block; margin-top: 15px; }
   </style>
 </head>
 <body>
-  <h1>Audio Sampler</h1>
-  <input type="file" id="fileUpload" accept="audio/*" />
-  <canvas id="waveform"></canvas>
 
-  <div class="controls">
-    <button id="stop">Stop</button>
-    <div id="chopButtons"></div>
-  </div>
+<h1>8-Chop Audio Sampler</h1>
 
-  <div class="controls">
-    <label>Volume: <input type="range" id="volume" min="0" max="2" step="0.01" value="1"></label>
-    <label>Delay: <input type="range" id="delay" min="0" max="1" step="0.01" value="0"></label>
-    <label>Reverb: <input type="range" id="reverb" min="0" max="1" step="0.01" value="0"></label>
-    <label>Chorus: <input type="range" id="chorus" min="0" max="1" step="0.01" value="0"></label>
-  </div>
+<input type="file" id="audioFile" accept="audio/*"><br><br>
 
-  <script type="module" src="finaldraft.js"></script>
+<div class="chops">
+  <button data-chop="0">Chop 1</button>
+  <button data-chop="1">Chop 2</button>
+  <button data-chop="2">Chop 3</button>
+  <button data-chop="3">Chop 4</button>
+  <button data-chop="4">Chop 5</button>
+  <button data-chop="5">Chop 6</button>
+  <button data-chop="6">Chop 7</button>
+  <button data-chop="7">Chop 8</button>
+</div>
+
+<div class="controls">
+  <label>Volume
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.9">
+  </label>
+
+  <label>Reverb Amount
+    <input type="range" id="reverb" min="0" max="1" step="0.01" value="0">
+  </label>
+
+  <label>Delay Amount
+    <input type="range" id="delay" min="0" max="1" step="0.01" value="0">
+  </label>
+
+  <label>Chorus Depth
+    <input type="range" id="chorus" min="0" max="0.02" step="0.001" value="0.005">
+  </label>
+</div>
+
+<script src="finaldraft.js"></script>
 </body>
 </html>
