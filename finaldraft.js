@@ -1,94 +1,114 @@
-let ctx = new (window.AudioContext || window.webkitAudioContext)();
+// AUDIO CONTEXT
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 let audioBuffer = null;
 let currentSource = null;
 
-// EFFECT NODES
-let gainNode = ctx.createGain();
+// === MASTER OUT ===
+const masterGain = ctx.createGain();
+masterGain.connect(ctx.destination);
 
-// Delay
-let delayNode = ctx.createDelay(1);
-delayNode.delayTime.value = 0.25;
-let delayGain = ctx.createGain();
+// === FILTER ===
+const filter = ctx.createBiquadFilter();
+filter.type = "lowpass";
+filter.frequency.value = 4000;
+filter.connect(masterGain);
+
+// === DELAY ===
+const delay = ctx.createDelay(1.0);
+const delayGain = ctx.createGain();
 delayGain.gain.value = 0;
+delay.connect(delayGain);
+delayGain.connect(filter);
 
-// Convolution Reverb
-let convolver = ctx.createConvolver();
-let reverbGain = ctx.createGain();
+// === REVERB ===
+const convolver = ctx.createConvolver();
+const reverbGain = ctx.createGain();
 reverbGain.gain.value = 0;
+convolver.connect(reverbGain);
+reverbGain.connect(filter);
 
-// Chorus (LFO-modulated delay)
-let chorusDelay = ctx.createDelay();
-chorusDelay.delayTime.value = 0.015;
-let chorusLFO = ctx.createOscillator();
-let chorusDepth = ctx.createGain();
-chorusDepth.gain.value = 0.005;
-
+// === CHORUS ===
+const chorusDelay = ctx.createDelay(0.03);
+const chorusDepth = ctx.createGain();
+const chorusLFO = ctx.createOscillator();
+chorusLFO.frequency.value = 0.25; // smoother
+chorusDepth.gain.value = 0.01;
 chorusLFO.connect(chorusDepth);
 chorusDepth.connect(chorusDelay.delayTime);
+chorusDelay.connect(filter);
 chorusLFO.start();
 
-// MASTER OUTPUT
-gainNode.connect(ctx.destination);
-delayNode.connect(delayGain).connect(ctx.destination);
-convolver.connect(reverbGain).connect(ctx.destination);
-chorusDelay.connect(ctx.destination);
+// === LOAD AUDIO ===
+document.getElementById("audioFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  const buf = await file.arrayBuffer();
+  audioBuffer = await ctx.decodeAudioData(buf);
+});
 
-// LOAD IMPULSE RESPONSE FOR REVERB
-fetch("ir.wav")
-  .then((res) => res.arrayBuffer())
-  .then((buf) => ctx.decodeAudioData(buf))
-  .then((ir) => (convolver.buffer = ir));
+// === BUILD BUTTONS ===
+function rebuildChopButtons() {
+  const sliceCount = Number(document.getElementById("sliceCount").value);
+  const container = document.getElementById("chopButtons");
+  container.innerHTML = "";
 
-// LOAD AUDIO FILE
-document.getElementById("audioFile").onchange = async (e) => {
-  let file = e.target.files[0];
-  let arrayBuf = await file.arrayBuffer();
-  audioBuffer = await ctx.decodeAudioData(arrayBuf);
-};
+  for (let i = 0; i < sliceCount; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = "Chop " + (i + 1);
+    btn.onclick = () => playChop(i);
+    container.appendChild(btn);
+  }
+}
 
-// PLAY CHOP
-function playChop(chopIndex) {
+rebuildChopButtons();
+document.getElementById("sliceCount").onchange = rebuildChopButtons;
+
+// === PLAY CHOP ===
+function playChop(i) {
   if (!audioBuffer) return;
+
+  // stop any currently playing chop
   if (currentSource) currentSource.stop();
 
-  let source = ctx.createBufferSource();
+  const sliceCount = Number(document.getElementById("sliceCount").value);
+  const chopLen = audioBuffer.duration / sliceCount;
+
+  const source = ctx.createBufferSource();
   source.buffer = audioBuffer;
 
-  let chopSize = audioBuffer.duration / 8;
-  let startTime = chopIndex * chopSize;
-
-  // CONNECT EFFECTS
-  source.connect(gainNode);
-  source.connect(delayNode);
+  // routing
+  source.connect(filter);
+  source.connect(delay);
   source.connect(convolver);
   source.connect(chorusDelay);
 
-  source.start(0, startTime, chopSize);
+  // start slice
+  source.start(0, i * chopLen, chopLen);
+
   currentSource = source;
 }
 
-// BUTTON HANDLERS
-document.querySelectorAll("button[data-chop]").forEach((btn) => {
-  btn.onclick = () => {
-    let chop = Number(btn.dataset.chop);
-    playChop(chop);
-  };
-});
-
-// EFFECT SLIDERS
-document.getElementById("volume").oninput = (e) => {
-  gainNode.gain.value = e.target.value;
+// === STOP BUTTON ===
+document.getElementById("stopBtn").onclick = () => {
+  if (currentSource) currentSource.stop();
+  currentSource = null;
 };
 
-document.getElementById("reverb").oninput = (e) => {
-  reverbGain.gain.value = e.target.value;
-};
+// === SLIDER HANDLERS ===
+document.getElementById("volume").oninput = (e) =>
+  (masterGain.gain.value = e.target.value);
 
-document.getElementById("delay").oninput = (e) => {
-  delayGain.gain.value = e.target.value;
-};
+document.getElementById("delay").oninput = (e) =>
+  (delayGain.gain.value = e.target.value);
 
-document.getElementById("chorus").oninput = (e) => {
-  chorusDepth.gain.value = e.target.value;
-};
+document.getElementById("reverb").oninput = (e) =>
+  (reverbGain.gain.value = e.target.value);
+
+document.getElementById("chorus").oninput = (e) =>
+  (chorusDepth.gain.value = e.target.value);
+
+document.getElementById("filterCutoff").oninput = (e) =>
+  (filter.frequency.value = e.target.value);
+
+document.getElementById("filterType").onchange = (e) =>
+  (filter.type = e.target.value);

@@ -1,52 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>8-Chop Sampler</title>
+  <meta charset="UTF-8">
+  <title>Chop Sampler</title>
   <style>
-    body { font-family: Arial; background: #f3f3f3; padding: 20px; }
-    h1 { font-weight: 700; }
-    .chops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-    button { padding: 15px; font-size: 16px; border-radius: 8px; border: none; background: #444; color: white; cursor: pointer; }
-    button:hover { background: #222; }
-    .controls { margin-top: 30px; }
-    .controls label { display: block; margin-top: 15px; }
+    body { font-family: sans-serif; padding: 20px; }
+    .chops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    button { padding: 12px; }
   </style>
 </head>
+
 <body>
+  <h1>Chop Sampler</h1>
 
-<h1>8-Chop Audio Sampler</h1>
+  <input type="file" id="audioFile" accept="audio/*">
 
-<input type="file" id="audioFile" accept="audio/*"><br><br>
+  <p>
+    Slice Count:
+    <input type="number" id="sliceCount" value="8" min="1" max="64">
+  </p>
 
-<div class="chops">
-  <button data-chop="0">Chop 1</button>
-  <button data-chop="1">Chop 2</button>
-  <button data-chop="2">Chop 3</button>
-  <button data-chop="3">Chop 4</button>
-  <button data-chop="4">Chop 5</button>
-  <button data-chop="5">Chop 6</button>
-  <button data-chop="6">Chop 7</button>
-  <button data-chop="7">Chop 8</button>
-</div>
+  <button id="stopBtn">STOP</button>
 
-<div class="controls">
-  <label>Volume
-    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.9">
-  </label>
+  <h2>Chops</h2>
+  <div class="chops" id="chopButtons"></div>
 
-  <label>Reverb Amount
-    <input type="range" id="reverb" min="0" max="1" step="0.01" value="0">
-  </label>
+  <h2>Effects</h2>
+  <p>Volume <input type="range" id="volume" min="0" max="1" step="0.01" value="1"></p>
+  <p>Reverb <input type="range" id="reverb" min="0" max="1" step="0.01" value="0"></p>
+  <p>Delay <input type="range" id="delay" min="0" max="1" step="0.01" value="0"></p>
+  <p>Chorus Depth <input type="range" id="chorus" min="0" max="0.02" step="0.001" value="0.004"></p>
 
-  <label>Delay Amount
-    <input type="range" id="delay" min="0" max="1" step="0.01" value="0">
-  </label>
+  <p>
+    Filter:
+    <select id="filterType">
+      <option value="lowpass">Lowpass</option>
+      <option value="highpass">Highpass</option>
+      <option value="bandpass">Bandpass</option>
+    </select>
+  </p>
 
-  <label>Chorus Depth
-    <input type="range" id="chorus" min="0" max="0.02" step="0.001" value="0.005">
-  </label>
-</div>
+  <p>
+    Filter Cutoff:
+    <input type="range" id="filterCutoff" min="200" max="8000" step="50" value="4000">
+  </p>
 
-<script src="finaldraft.js"></script>
+  <script src="finaldraft.js"></script>
 </body>
 </html>
