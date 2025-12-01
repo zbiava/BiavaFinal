@@ -1,55 +1,68 @@
-// AUDIO CONTEXT
+// ==== AUDIO CONTEXT ====
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 let audioBuffer = null;
 let currentSource = null;
 
-// === MASTER OUT ===
+// ==== MASTER OUT ====
 const masterGain = ctx.createGain();
+masterGain.gain.value = 1;
 masterGain.connect(ctx.destination);
 
-// === FILTER ===
+// ==== FILTER ====
 const filter = ctx.createBiquadFilter();
 filter.type = "lowpass";
 filter.frequency.value = 4000;
+
+// Filter → Master
 filter.connect(masterGain);
 
-// === DELAY ===
+// ==== DELAY ====
 const delay = ctx.createDelay(1.0);
 const delayGain = ctx.createGain();
 delayGain.gain.value = 0;
-delay.connect(delayGain);
-delayGain.connect(filter);
 
-// === REVERB ===
+delay.connect(delayGain);
+delayGain.connect(masterGain); // corrected routing
+
+// ==== REVERB ====
 const convolver = ctx.createConvolver();
 const reverbGain = ctx.createGain();
 reverbGain.gain.value = 0;
-convolver.connect(reverbGain);
-reverbGain.connect(filter);
 
-// === CHORUS ===
+convolver.connect(reverbGain);
+reverbGain.connect(masterGain); // corrected routing
+
+// ==== CHORUS ====
 const chorusDelay = ctx.createDelay(0.03);
 const chorusDepth = ctx.createGain();
 const chorusLFO = ctx.createOscillator();
-chorusLFO.frequency.value = 0.25; // smoother
+
+chorusLFO.frequency.value = 0.25;
 chorusDepth.gain.value = 0.01;
+
 chorusLFO.connect(chorusDepth);
 chorusDepth.connect(chorusDelay.delayTime);
-chorusDelay.connect(filter);
+
+chorusDelay.connect(masterGain); // corrected routing
+
 chorusLFO.start();
 
-// === LOAD AUDIO ===
+// ==== LOAD AUDIO ====
 document.getElementById("audioFile").addEventListener("change", async (e) => {
   const file = e.target.files[0];
-  const buf = await file.arrayBuffer();
-  audioBuffer = await ctx.decodeAudioData(buf);
+  const buffer = await file.arrayBuffer();
+  audioBuffer = await ctx.decodeAudioData(buffer);
+
+  // unlock audio on iOS
+  ctx.resume();
 });
 
-// === BUILD BUTTONS ===
+// ==== BUILD CHOP BUTTONS ====
 function rebuildChopButtons() {
   const sliceCount = Number(document.getElementById("sliceCount").value);
   const container = document.getElementById("chopButtons");
+
   container.innerHTML = "";
 
   for (let i = 0; i < sliceCount; i++) {
@@ -63,11 +76,11 @@ function rebuildChopButtons() {
 rebuildChopButtons();
 document.getElementById("sliceCount").onchange = rebuildChopButtons;
 
-// === PLAY CHOP ===
+// ==== PLAY CHOP ====
 function playChop(i) {
   if (!audioBuffer) return;
 
-  // stop any currently playing chop
+  // stop any active source
   if (currentSource) currentSource.stop();
 
   const sliceCount = Number(document.getElementById("sliceCount").value);
@@ -76,39 +89,38 @@ function playChop(i) {
   const source = ctx.createBufferSource();
   source.buffer = audioBuffer;
 
-  // routing
+  // MAIN ROUTING
   source.connect(filter);
   source.connect(delay);
   source.connect(convolver);
   source.connect(chorusDelay);
 
-  // start slice
   source.start(0, i * chopLen, chopLen);
 
   currentSource = source;
 }
 
-// === STOP BUTTON ===
+// ==== STOP BUTTON ====
 document.getElementById("stopBtn").onclick = () => {
   if (currentSource) currentSource.stop();
   currentSource = null;
 };
 
-// === SLIDER HANDLERS ===
+// ==== SLIDER HANDLERS ====
 document.getElementById("volume").oninput = (e) =>
-  (masterGain.gain.value = e.target.value);
+  (masterGain.gain.value = Number(e.target.value));
 
 document.getElementById("delay").oninput = (e) =>
-  (delayGain.gain.value = e.target.value);
+  (delayGain.gain.value = Number(e.target.value));
 
 document.getElementById("reverb").oninput = (e) =>
-  (reverbGain.gain.value = e.target.value);
+  (reverbGain.gain.value = Number(e.target.value));
 
 document.getElementById("chorus").oninput = (e) =>
-  (chorusDepth.gain.value = e.target.value);
+  (chorusDepth.gain.value = Number(e.target.value));
 
 document.getElementById("filterCutoff").oninput = (e) =>
-  (filter.frequency.value = e.target.value);
+  (filter.frequency.value = Number(e.target.value));
 
 document.getElementById("filterType").onchange = (e) =>
   (filter.type = e.target.value);
