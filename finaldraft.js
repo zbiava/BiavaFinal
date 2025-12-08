@@ -1,39 +1,36 @@
-// ==== AUDIO CONTEXT ====
+// AUDIO CONTEXT
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 let audioBuffer = null;
 let currentSource = null;
 
-// ==== MASTER OUT ====
+// === MASTER OUT ===
 const masterGain = ctx.createGain();
-masterGain.gain.value = 1;
 masterGain.connect(ctx.destination);
 
-// ==== FILTER ====
+// === FILTER ===
 const filter = ctx.createBiquadFilter();
 filter.type = "lowpass";
 filter.frequency.value = 4000;
-
-// Filter → Master
 filter.connect(masterGain);
 
-// ==== DELAY ====
+// === DELAY (fixed!) ===
 const delay = ctx.createDelay(1.0);
-const delayGain = ctx.createGain();
-delayGain.gain.value = 0;
+const delayWet = ctx.createGain();
+const delayFeedback = ctx.createGain();
 
-delay.connect(delayGain);
-delayGain.connect(masterGain); // corrected routing
+// default values
+delayWet.gain.value = 0;
+delayFeedback.gain.value = 0.3;
 
-// ==== REVERB ====
-const convolver = ctx.createConvolver();
-const reverbGain = ctx.createGain();
-reverbGain.gain.value = 0;
+delay.connect(delayWet);
+delayWet.connect(filter);
 
-convolver.connect(reverbGain);
-reverbGain.connect(masterGain); // corrected routing
+// feedback loop
+delay.connect(delayFeedback);
+delayFeedback.connect(delay);
 
-// ==== CHORUS ====
+// === CHORUS ===
 const chorusDelay = ctx.createDelay(0.03);
 const chorusDepth = ctx.createGain();
 const chorusLFO = ctx.createOscillator();
@@ -44,25 +41,20 @@ chorusDepth.gain.value = 0.01;
 chorusLFO.connect(chorusDepth);
 chorusDepth.connect(chorusDelay.delayTime);
 
-chorusDelay.connect(masterGain); // corrected routing
-
+chorusDelay.connect(filter);
 chorusLFO.start();
 
-// ==== LOAD AUDIO ====
+// === LOAD AUDIO ===
 document.getElementById("audioFile").addEventListener("change", async (e) => {
   const file = e.target.files[0];
-  const buffer = await file.arrayBuffer();
-  audioBuffer = await ctx.decodeAudioData(buffer);
-
-  // unlock audio on iOS
-  ctx.resume();
+  const buf = await file.arrayBuffer();
+  audioBuffer = await ctx.decodeAudioData(buf);
 });
 
-// ==== BUILD CHOP BUTTONS ====
+// === BUILD BUTTONS ===
 function rebuildChopButtons() {
   const sliceCount = Number(document.getElementById("sliceCount").value);
   const container = document.getElementById("chopButtons");
-
   container.innerHTML = "";
 
   for (let i = 0; i < sliceCount; i++) {
@@ -76,11 +68,10 @@ function rebuildChopButtons() {
 rebuildChopButtons();
 document.getElementById("sliceCount").onchange = rebuildChopButtons;
 
-// ==== PLAY CHOP ====
+// === PLAY CHOP ===
 function playChop(i) {
   if (!audioBuffer) return;
 
-  // stop any active source
   if (currentSource) currentSource.stop();
 
   const sliceCount = Number(document.getElementById("sliceCount").value);
@@ -89,38 +80,33 @@ function playChop(i) {
   const source = ctx.createBufferSource();
   source.buffer = audioBuffer;
 
-  // MAIN ROUTING
-  source.connect(filter);
-  source.connect(delay);
-  source.connect(convolver);
-  source.connect(chorusDelay);
+  // routing
+  source.connect(filter); // dry
+  source.connect(delay); // send to delay
+  source.connect(chorusDelay); // chorus send
 
   source.start(0, i * chopLen, chopLen);
-
   currentSource = source;
 }
 
-// ==== STOP BUTTON ====
+// === STOP BUTTON ===
 document.getElementById("stopBtn").onclick = () => {
   if (currentSource) currentSource.stop();
   currentSource = null;
 };
 
-// ==== SLIDER HANDLERS ====
+// === SLIDERS ===
 document.getElementById("volume").oninput = (e) =>
-  (masterGain.gain.value = Number(e.target.value));
+  (masterGain.gain.value = e.target.value);
 
 document.getElementById("delay").oninput = (e) =>
-  (delayGain.gain.value = Number(e.target.value));
-
-document.getElementById("reverb").oninput = (e) =>
-  (reverbGain.gain.value = Number(e.target.value));
+  (delayWet.gain.value = e.target.value); // FIXED → adjusts wet level
 
 document.getElementById("chorus").oninput = (e) =>
-  (chorusDepth.gain.value = Number(e.target.value));
+  (chorusDepth.gain.value = e.target.value);
 
 document.getElementById("filterCutoff").oninput = (e) =>
-  (filter.frequency.value = Number(e.target.value));
+  (filter.frequency.value = e.target.value);
 
 document.getElementById("filterType").onchange = (e) =>
   (filter.type = e.target.value);
