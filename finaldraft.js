@@ -1,28 +1,31 @@
-// AUDIO CONTEXT
+// 
+// ------audio setup------
+
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 let audioBuffer = null;
 let currentSource = null;
 
-// === MASTER OUT ===
-const masterGain = ctx.createGain();
-masterGain.connect(ctx.destination);
+// ------master gain------
+const master = ctx.createGain();
+master.gain.value = 1;
+master.connect(ctx.destination);
 
-// === FILTER ===
+// --------filter------
 const filter = ctx.createBiquadFilter();
 filter.type = "lowpass";
 filter.frequency.value = 4000;
-filter.connect(masterGain);
+filter.connect(master);
 
-// === DELAY (fixed!) ===
+// -----------delay-------
 const delay = ctx.createDelay(1.0);
 const delayWet = ctx.createGain();
 const delayFeedback = ctx.createGain();
 
-// default values
-delayWet.gain.value = 0;
+delayWet.gain.value = 0; 
 delayFeedback.gain.value = 0.3;
 
+// routing
 delay.connect(delayWet);
 delayWet.connect(filter);
 
@@ -30,83 +33,98 @@ delayWet.connect(filter);
 delay.connect(delayFeedback);
 delayFeedback.connect(delay);
 
-// === CHORUS ===
+// -----------chorus effect-----------
 const chorusDelay = ctx.createDelay(0.03);
 const chorusDepth = ctx.createGain();
 const chorusLFO = ctx.createOscillator();
 
-chorusLFO.frequency.value = 0.25;
 chorusDepth.gain.value = 0.01;
+chorusLFO.frequency.value = 0.25;
 
 chorusLFO.connect(chorusDepth);
 chorusDepth.connect(chorusDelay.delayTime);
 
 chorusDelay.connect(filter);
+
 chorusLFO.start();
 
-// === LOAD AUDIO ===
+// --------load audio-----------
 document.getElementById("audioFile").addEventListener("change", async (e) => {
   const file = e.target.files[0];
+  if (!file) return;
+
   const buf = await file.arrayBuffer();
   audioBuffer = await ctx.decodeAudioData(buf);
+
+  console.log("Loaded audio:", audioBuffer.duration, "seconds");
 });
 
-// === BUILD BUTTONS ===
+// -----------chops-----------
 function rebuildChopButtons() {
-  const sliceCount = Number(document.getElementById("sliceCount").value);
-  const container = document.getElementById("chopButtons");
-  container.innerHTML = "";
+  const count = Number(document.getElementById("sliceCount").value);
+  const div = document.getElementById("chopButtons");
+  div.innerHTML = "";
 
-  for (let i = 0; i < sliceCount; i++) {
+  for (let i = 0; i < count; i++) {
     const btn = document.createElement("button");
-    btn.textContent = "Chop " + (i + 1);
+    btn.textContent = `Chop ${i + 1}`;
     btn.onclick = () => playChop(i);
-    container.appendChild(btn);
+    div.appendChild(btn);
   }
 }
 
-rebuildChopButtons();
 document.getElementById("sliceCount").onchange = rebuildChopButtons;
+rebuildChopButtons();
 
-// === PLAY CHOP ===
-function playChop(i) {
+// ----------play chop--------
+function playChop(index) {
   if (!audioBuffer) return;
 
-  if (currentSource) currentSource.stop();
+  // clean stop
+  if (currentSource) {
+    try {
+      currentSource.stop();
+    } catch (e) {}
+  }
 
-  const sliceCount = Number(document.getElementById("sliceCount").value);
-  const chopLen = audioBuffer.duration / sliceCount;
+  const count = Number(document.getElementById("sliceCount").value);
+  const sliceLen = audioBuffer.duration / count;
 
-  const source = ctx.createBufferSource();
-  source.buffer = audioBuffer;
+  const src = ctx.createBufferSource();
+  src.buffer = audioBuffer;
 
-  // routing
-  source.connect(filter); // dry
-  source.connect(delay); // send to delay
-  source.connect(chorusDelay); // chorus send
+ 
+  src.connect(filter); 
+  src.connect(delay);
+  src.connect(chorusDelay); 
 
-  source.start(0, i * chopLen, chopLen);
-  currentSource = source;
+  src.start(0, index * sliceLen, sliceLen);
+
+  currentSource = src;
 }
 
-// === STOP BUTTON ===
+// -----------stop---------
 document.getElementById("stopBtn").onclick = () => {
-  if (currentSource) currentSource.stop();
-  currentSource = null;
+  if (currentSource) {
+    try {
+      currentSource.stop(ctx.currentTime + 0.01);
+    } catch (e) {}
+    currentSource = null;
+  }
 };
 
-// === SLIDERS ===
+// --------UI--------
 document.getElementById("volume").oninput = (e) =>
-  (masterGain.gain.value = e.target.value);
+  (master.gain.value = e.target.value);
 
 document.getElementById("delay").oninput = (e) =>
-  (delayWet.gain.value = e.target.value); // FIXED → adjusts wet level
+  (delayWet.gain.value = e.target.value);
 
 document.getElementById("chorus").oninput = (e) =>
   (chorusDepth.gain.value = e.target.value);
 
-document.getElementById("filterCutoff").oninput = (e) =>
-  (filter.frequency.value = e.target.value);
-
 document.getElementById("filterType").onchange = (e) =>
   (filter.type = e.target.value);
+
+document.getElementById("filterCutoff").oninput = (e) =>
+  (filter.frequency.value = e.target.value);
