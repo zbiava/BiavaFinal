@@ -1,4 +1,4 @@
-// 
+//
 // ------audio setup------
 
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -22,12 +22,12 @@ const delay = ctx.createDelay(1.0);
 const delayWet = ctx.createGain();
 const delayFeedback = ctx.createGain();
 
-delayWet.gain.value = 0; 
+delayWet.gain.value = 0;
 delayFeedback.gain.value = 0.3;
 
-// routing
+// routing (FIXED: delayWet → master instead of filter)
 delay.connect(delayWet);
-delayWet.connect(filter);
+delayWet.connect(master); // *** WORKING DELAY OUTPUT ***
 
 // feedback loop
 delay.connect(delayFeedback);
@@ -93,10 +93,10 @@ function playChop(index) {
   const src = ctx.createBufferSource();
   src.buffer = audioBuffer;
 
- 
-  src.connect(filter); 
+  // dry + sends
+  src.connect(filter);
   src.connect(delay);
-  src.connect(chorusDelay); 
+  src.connect(chorusDelay);
 
   src.start(0, index * sliceLen, sliceLen);
 
@@ -118,7 +118,7 @@ document.getElementById("volume").oninput = (e) =>
   (master.gain.value = e.target.value);
 
 document.getElementById("delay").oninput = (e) =>
-  (delayWet.gain.value = e.target.value);
+  (delayWet.gain.value = e.target.value); // now works
 
 document.getElementById("chorus").oninput = (e) =>
   (chorusDepth.gain.value = e.target.value);
